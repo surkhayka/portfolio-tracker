@@ -65,3 +65,7 @@ npm run tauri build -- --bundles app -- --locked
 By default, the build writes `Portfolio.app` to `src-tauri/target/release/bundle/macos/`. To run the built app against a separate test ledger, set `PORTFOLIO_DATA_DIR` to an absolute scratch directory before launching the executable.
 
 For bugs or feature requests, [open an issue](https://github.com/surkhayka/portfolio-tracker/issues/new). Include your app version and steps to reproduce. Use sample data when attaching CSVs or screenshots.
+
+## License
+
+[MIT](LICENSE)
