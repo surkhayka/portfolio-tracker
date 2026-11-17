@@ -4,6 +4,21 @@ A free desktop portfolio tracker for US stocks and ETFs. Import your trades, see
 
 **[Download Portfolio for Mac · Apple silicon](https://github.com/surkhayka/portfolio-tracker/releases/latest/download/Portfolio-macOS-Apple-silicon.zip)** · [Release notes and downloads](https://github.com/surkhayka/portfolio-tracker/releases)
 
+## Screenshots
+
+All screenshots use fictional trades and prices.
+
+![Portfolio Holdings with summary cards, position filters, and a sortable holdings table](docs/screenshots/holdings.png)
+
+<details>
+<summary>Show the Transactions and Imports screens</summary>
+
+![Portfolio Transactions with trade history and filters](docs/screenshots/transactions.png)
+
+![Portfolio Imports with the CSV file picker, conversion guide, and import history](docs/screenshots/imports.png)
+
+</details>
+
 ## Install
 
 1. Download the ZIP above and unzip it.
