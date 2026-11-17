@@ -1,0 +1,8 @@
+transaction_id,timestamp,type,symbol,currency,quantity,unit_price,amount,fees,close_position,split_ratio,reported_pnl,notes
+example-buy-1,2025-01-06T15:30:00Z,BUY,AAPL,USD,10,100,,,,,,Synthetic example
+example-buy-2,2025-01-07T15:30:00Z,BUY,AAPL,USD,10,120,,,,,,
+example-sell-1,2025-01-08T15:30:00Z,SELL,AAPL,USD,5,130,,,,,,
+example-div-1,2025-01-10T15:30:00Z,DIVIDEND,AAPL,USD,,,2.50,,,,,
+example-open-1,2025-01-06T15:00:00Z,OPENING_BALANCE,MSFT,USD,3.25,,950,,,,,
+example-buy-3,2025-01-06T16:00:00Z,BUY,GOOGL,USD,1,160,,,,,,
+example-close-1,2025-01-09T16:00:00Z,SELL,GOOGL,USD,1,165,,,true,,,

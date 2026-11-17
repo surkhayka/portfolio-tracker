@@ -1,0 +1,14 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+.DS_Store
+*.sqlite*
+.env*
+*.pdf
+*.db
+*.db-shm
+*.db-wal
+*.csv
+!public/portfolio-template.csv
+!public/portfolio-example.csv
