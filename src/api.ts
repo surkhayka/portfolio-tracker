@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core'
+import { invoke, isTauri } from '@tauri-apps/api/core'
 
 export type Kind = 'BUY' | 'SELL' | 'OPENING_BALANCE' | 'DIVIDEND' | 'SPLIT'
 export type Event = {
@@ -41,6 +41,8 @@ export type Settings = { connected: boolean; credential_error: string | null; ti
 export type Batch = { id: number; filename: string; time: string; added: number; replaced: number; skipped: number; undone: boolean }
 export type Transfer = 'backup' | 'restore' | 'export' | 'guide' | 'template' | 'example'
 export const api = {
+  isDesktop: isTauri,
+  openLogoAttribution: () => invoke<void>('open_logo_attribution'),
   portfolio: () => invoke<Portfolio>('portfolio'),
   batches: () => invoke<Batch[]>('list_batches'),
   preview: (action: Action) => invoke<Preview>('preview', { action }),

@@ -31,6 +31,7 @@ All screenshots use fictional trades and prices.
 - **Import your own trades.** Use the [CSV template](public/portfolio-template.csv) or follow the [broker PDF-to-CSV guide](public/broker-pdf-to-csv.md). Portfolio previews changes, flags conflicts, and checks for duplicate IDs before import. You can exclude individual trades you do not want counted.
 - **Start with current positions.** Choose **Add → Add existing holding** and enter a starting quantity and cost basis. You can add earlier trades later through the import preview.
 - **Add automatic prices if you want them.** In **Settings**, connect your own Alpaca key and secret and select the matching Paper or Live account. The app stores credentials in your OS credential store and uses consolidated US prices delayed by at least 15 minutes. Automatic refresh runs about every two minutes while Holdings is active. You can switch it off or enter prices manually from a holding’s details.
+- **Show company logos if you want them.** Enable **Settings → Company logos** to load logos from [Elbstream](https://elbstream.com/logos) for visible tickers. This setting is off by default. Initials appear when a logo is unavailable.
 
 ## What you can track
 

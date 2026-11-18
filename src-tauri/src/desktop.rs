@@ -149,6 +149,11 @@ fn save_timezone(state: State<'_, AppState>, timezone: String) -> Result<()> {
 }
 
 #[tauri::command]
+fn open_logo_attribution() -> Result<()> {
+    open::that_detached("https://elbstream.com/logos").map_err(err)
+}
+
+#[tauri::command]
 async fn connect(state: State<'_, AppState>, mut credentials: Credentials) -> Result<()> {
     let _guard = state.network.lock().await;
     credentials.key = credentials.key.trim().into();
@@ -335,6 +340,7 @@ pub fn run() {
             commit,
             get_settings,
             save_timezone,
+            open_logo_attribution,
             connect,
             disconnect,
             refresh_prices,

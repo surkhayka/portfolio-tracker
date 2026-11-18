@@ -4,12 +4,13 @@ import { ArrowDown, ArrowDownUp, ArrowUp, ChevronRight, Coins, Layers3, ListFilt
 import type { FormEvent } from 'react'
 import { api, type Holding, type Portfolio, type Record } from './api'
 import { age, date, kindName, localInput, money, percent, shares, tone } from './format'
-import { Empty, Modal, Monogram, Notice, PAGE_SIZE, SearchBox, TablePager, validPage } from './components'
+import { Empty, Modal, Notice, PAGE_SIZE, SearchBox, TablePager, validPage } from './components'
+import { LogoAttribution, SymbolLogo } from './SymbolLogo'
 const column = createColumnHelper<Holding>()
 const cmp = (a: string | null, b: string | null) => Number(a ?? 0) - Number(b ?? 0)
 const amount = (v?: string | null) => <span className={tone(v)}>{money(v, true)}</span>
 const cols = [
-  column.accessor('symbol', {header: 'Symbol', cell: info => <span className="symbol"><Monogram symbol={info.getValue()}/><strong>{info.getValue()}</strong>{Number(info.row.original.quantity) === 0 && <span className="badge">Closed</span>}</span>, enableHiding: false}),
+  column.accessor('symbol', {header: 'Symbol', cell: info => <span className="symbol"><SymbolLogo symbol={info.getValue()}/><strong>{info.getValue()}</strong>{Number(info.row.original.quantity) === 0 && <span className="badge">Closed</span>}</span>, enableHiding: false}),
   column.accessor('quantity', {header: 'Shares', cell: c => shares(c.getValue()), sortingFn: (a,b) => cmp(a.original.quantity,b.original.quantity)}),
   column.accessor(h => h.quote?.price, {id:'price', sortUndefined:'last', sortDescFirst:true, header:'Price', cell: c => <span title={c.row.original.quote ? date(c.row.original.quote.at) : 'Price unavailable'}>{money(c.getValue())}{c.row.original.quote?.manual && <sup> M</sup>}</span>, sortingFn: (a,b) => cmp(a.original.quote?.price ?? null,b.original.quote?.price ?? null)}),
   column.accessor(h => h.allocation ?? undefined, {id:'allocation', sortUndefined:'last', sortDescFirst:true, header:'Allocation',cell: c => percent(c.getValue()), sortingFn: (a,b) => cmp(a.original.allocation,b.original.allocation)}),
@@ -131,7 +132,7 @@ function HoldingDetail({ holding: h, records, timezone, onClose, onReload, onEdi
   function submit(event: FormEvent) { event.preventDefault(); void update(price) }
   return <Modal drawer onClose={onClose} title={h.symbol} description="Holding details">
     <div className="dialog-body">
-      <article className="detail-hero"><Monogram symbol={h.symbol}/><div><span className="muted">Market value</span><strong>{money(h.value)}</strong></div></article>
+      <article className="detail-hero"><SymbolLogo symbol={h.symbol}/><div><span className="muted">Market value</span><strong>{money(h.value)}</strong></div><LogoAttribution/></article>
       <dl className="stats">{[
         ['Shares',shares(h.quantity)],['Price',money(h.quote?.price)],['Average cost',money(h.average)],['Remaining cost',money(h.basis)],
         ['Unrealized gain',amount(h.unrealized)],['Realized gain',amount(h.realized)],['Dividends',money(h.dividends)],['Daily price move',amount(h.daily)],

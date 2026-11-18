@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../src/App'
 import { api, type Action, type Holding, type Portfolio, type Preview, type Record } from '../src/api'
 import { Review } from '../src/Imports'
 
-vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }))
+vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn(), isTauri: () => false }))
 const empty: Portfolio = {revision:0,holdings:[],transactions:[],summary:{basis:'0',value:'0',unrealized:'0',unrealized_percent:null,realized:'0',dividends:'0',total:'0',incomplete:false,missing:[]}}
 const result: Preview = {revision:7,changed:1,conflicts:[],warnings:[],opening_conflicts:[],rows:[],adjustments:[],
   impacts:[{symbol:'AAPL',before:{quantity:'0',basis:'0',realized:'0',dividends:'0',incomplete:false},
@@ -19,7 +19,7 @@ beforeEach(() => {
   vi.spyOn(api,'preview').mockResolvedValue(result)
   vi.spyOn(api,'commit').mockResolvedValue(undefined)
 })
-afterEach(() => {cleanup();vi.restoreAllMocks()})
+afterEach(() => {cleanup();localStorage.clear();vi.unstubAllGlobals();vi.restoreAllMocks()})
 
 describe('desktop interactions', () => {
   it('keeps an opening balance draft when returning from preview, then commits its revision', async () => {
@@ -112,6 +112,74 @@ it('updates prices without reloading the ledger or polling when the user opens T
   await user.click(screen.getByRole('button',{name:'Transactions'}))
   await act(async () => { window.dispatchEvent(new Event('focus')) })
   expect(refresh).toHaveBeenCalledTimes(1)
+})
+
+it('opts into visible logos, preserves them during price updates, and backs off after a missing logo', async () => {
+  const observe = vi.fn()
+  let onIntersection: IntersectionObserverCallback
+  const observer = {observe, unobserve: vi.fn()} as unknown as IntersectionObserver
+  vi.stubGlobal('IntersectionObserver', function (callback: IntersectionObserverCallback) {
+    onIntersection = callback
+    return observer
+  })
+  const show = (target: HTMLImageElement) => {
+    const rect = target.getBoundingClientRect()
+    act(() => onIntersection([{
+      target, isIntersecting: true, intersectionRatio: 1, boundingClientRect: rect,
+      intersectionRect: rect, rootBounds: rect, time: performance.now(),
+    }], observer))
+  }
+
+  const user = userEvent.setup()
+  const holdings = [holding('BRK.B', '200', '100'), holding('ZZZZ', '100', '0')]
+  vi.mocked(api.portfolio).mockResolvedValue({...empty, holdings})
+  vi.mocked(api.settings).mockResolvedValue({connected:true,timezone:'system',credential_error:null})
+  vi.spyOn(api,'refresh').mockResolvedValue({
+    received:1, valuation:{revision:0, holdings:[holding('BRK.B','237','137'), holdings[1]], summary:empty.summary},
+  })
+  localStorage.setItem('auto-refresh', 'off')
+  const view = render(<App/>)
+  const table = await screen.findByRole('table')
+  expect(table.querySelector('img')).toBeNull()
+  expect(observe).not.toHaveBeenCalled()
+  await user.click(screen.getByRole('button',{name:'Settings'}))
+  const toggle = screen.getByRole<HTMLInputElement>('checkbox',{name:'Show company logos'})
+  expect(toggle.checked).toBe(false)
+  await user.click(toggle)
+  await user.click(screen.getByRole('button',{name:'Holdings'}))
+  expect(screen.getByRole('link',{name:'Logos provided by Elbstream'})).toBeTruthy()
+
+  const [visible, belowFold] = screen.getByRole('table').querySelectorAll('img')
+  expect(visible.hasAttribute('src')).toBe(false)
+  show(visible)
+  expect(visible.src).toBe('https://api.elbstream.com/logos/symbol/BRK-B?format=png&size=96')
+  expect(belowFold.hasAttribute('src')).toBe(false)
+  fireEvent.load(visible)
+  expect(visible.classList.contains('loaded')).toBe(true)
+  await user.click(screen.getByRole('button',{name:'Refresh prices'}))
+  expect(await screen.findAllByText('$237.00')).toHaveLength(2)
+  expect(screen.getByRole('table').querySelector('img')).toBe(visible)
+  expect(observe).toHaveBeenCalledTimes(2)
+
+  show(belowFold)
+  fireEvent.error(belowFold)
+  expect(within(screen.getByRole('table')).getByText('ZZ')).toBeTruthy()
+  expect(screen.getByRole('table').querySelectorAll('img')).toHaveLength(1)
+  await user.click(screen.getByRole('button',{name:'Transactions'}))
+  await user.click(screen.getByRole('button',{name:'Holdings'}))
+  const retry = screen.getByRole('table').querySelectorAll('img')[1]
+  show(retry)
+  expect(retry.hasAttribute('src')).toBe(false)
+  expect(retry.isConnected).toBe(false)
+
+  view.unmount()
+  render(<App/>)
+  await user.click(screen.getByRole('button',{name:'Settings'}))
+  const savedToggle = screen.getByRole<HTMLInputElement>('checkbox',{name:'Show company logos'})
+  expect(savedToggle.checked).toBe(true)
+  await user.click(savedToggle)
+  await user.click(screen.getByRole('button',{name:'Holdings'}))
+  expect((await screen.findByRole('table')).querySelector('img')).toBeNull()
 })
 
 it('keeps a large transaction history responsive with pages and filters across the full history', async () => {

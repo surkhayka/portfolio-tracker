@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Eye, EyeOff, Pencil, Plus, ReceiptText } from 'lucide-react'
 import { api, type Action, type Event, type Kind, type Record } from './api'
-import { Empty, Modal, Monogram, Notice, PAGE_SIZE, SearchBox, TablePager, validPage } from './components'
+import { Empty, Modal, Notice, PAGE_SIZE, SearchBox, TablePager, validPage } from './components'
+import { SymbolLogo } from './SymbolLogo'
 import { date, kindName, localInput, money, shares } from './format'
 
 export function Transactions({ rows, timezone, add, edit, change }: {
@@ -26,7 +27,7 @@ export function Transactions({ rows, timezone, add, edit, change }: {
     </div>
     {filtered.length ? <div className="table-scroll ledger-scroll"><table><thead><tr><th>Date & time</th><th>Symbol</th><th>Type</th><th>Shares</th><th>Price</th><th>Amount</th><th aria-label="Transaction actions"/></tr></thead>
       <tbody>{filtered.slice(pageIndex * PAGE_SIZE, (pageIndex + 1) * PAGE_SIZE).map(row => <tr key={row.event.transaction_id} className={row.excluded ? 'disabled-row' : ''}>
-        <td>{date(row.event.timestamp,timezone)}</td><td><span className="symbol"><Monogram symbol={row.event.symbol}/><strong>{row.event.symbol}</strong></span></td>
+        <td>{date(row.event.timestamp,timezone)}</td><td><span className="symbol"><SymbolLogo symbol={row.event.symbol}/><strong>{row.event.symbol}</strong></span></td>
         <td><span className={'badge type-' + row.event.type.toLowerCase()}>{kindName[row.event.type]}</span>{row.excluded && <span className="badge">Excluded</span>}</td>
         <td>{shares(row.reconciled_quantity ?? row.event.quantity)}</td><td>{money(row.event.unit_price)}</td><td title={row.event.amount ? undefined : 'Calculated from execution price and quantity when applicable'}>{money(row.gross)}</td>
         <td><div className="row-actions"><button className="icon-btn" aria-label={`Edit ${row.event.symbol} transaction`} onClick={() => edit(row)}><Pencil size={15}/></button><button className="icon-btn" aria-label={row.excluded ? `Include ${row.event.symbol} transaction` : `Exclude ${row.event.symbol} transaction`} onClick={() => change({action:'exclude',id:row.event.transaction_id,excluded:!row.excluded},row.excluded ? 'Include transaction' : 'Exclude transaction')}>{row.excluded ? <Eye size={16}/> : <EyeOff size={16}/>}</button></div></td>

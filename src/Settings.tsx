@@ -1,9 +1,13 @@
 import { useState, type FormEvent } from 'react'
-import { Clock3, DatabaseBackup, Download, KeyRound, Upload } from 'lucide-react'
+import { Clock3, DatabaseBackup, Download, Image, KeyRound, Upload } from 'lucide-react'
 import { api, type Settings as Model, type Transfer } from './api'
 import { Modal, Notice } from './components'
 
-export default function Settings({ settings, update, transfer, autoRefresh, setAutomatic }: { settings: Model; update: () => Promise<void>; transfer: (operation: Transfer) => Promise<void>; autoRefresh: boolean; setAutomatic: (enabled: boolean) => void }) {
+export default function Settings({ settings, update, transfer, autoRefresh, setAutomatic, companyLogos, setCompanyLogos }: {
+  settings: Model; update: () => Promise<void>; transfer: (operation: Transfer) => Promise<void>
+  autoRefresh: boolean; setAutomatic: (enabled: boolean) => void
+  companyLogos: boolean; setCompanyLogos: (enabled: boolean) => void
+}) {
   const [key,setKey] = useState('')
   const [secret,setSecret] = useState('')
   const [live,setLive] = useState(false)
@@ -43,6 +47,13 @@ export default function Settings({ settings, update, transfer, autoRefresh, setA
         </form>
         <label className="toggle"><input type="checkbox" checked={autoRefresh} onChange={e => setAutomatic(e.target.checked)}/>Refresh prices automatically while Holdings is active</label>
         <p className="muted">Credentials are saved in your operating system’s credential store.</p>
+      </div>
+    </section>
+    <section className="card settings-card">
+      <div className="section-head"><div><h2><Image size={18}/>Company logos</h2></div></div>
+      <div className="settings-body">
+        <label className="toggle"><input type="checkbox" checked={companyLogos} aria-describedby="logo-privacy" onChange={e => setCompanyLogos(e.target.checked)}/>Show company logos</label>
+        <p className="muted" id="logo-privacy">Elbstream receives the tickers you view to load logos. Initials appear when a logo is unavailable.</p>
       </div>
     </section>
     <section className="card settings-card">

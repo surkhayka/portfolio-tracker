@@ -24,9 +24,6 @@ export function Notice({ children, error = false }: { children: ReactNode; error
 export function SearchBox({ value, onChange, placeholder }: { value: string; onChange: (q: string) => void; placeholder: string }) {
   return <label className="search-box"><Search size={16}/><input data-search="" aria-label={placeholder} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)}/>{value && <button className="icon-btn clear-search" aria-label="Clear search" onClick={() => onChange('')}><X size={14}/></button>}</label>
 }
-export function Monogram({ symbol }: { symbol: string }) {
-  return <span className={`monogram shade-${symbol.charCodeAt(0) % 5}`} aria-hidden="true">{symbol.slice(0, 2)}</span>
-}
 export function Empty({ icon, title, detail, children }: { icon: ReactNode; title: string; detail: string; children?: ReactNode }) {
   return <div className="empty"><div className="empty-icon">{icon}</div><h3>{title}</h3><p>{detail}</p>{children}</div>
 }

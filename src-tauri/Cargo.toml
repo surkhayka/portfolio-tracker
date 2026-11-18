@@ -1,6 +1,6 @@
 [package]
 name = "portfolio"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 description = "Local investment tracker"
 
@@ -11,6 +11,7 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 tauri-plugin-single-instance = "2"
+open = "5"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["arbitrary_precision"] }
 rusqlite = { version = "0.37", features = ["bundled", "backup"] }
