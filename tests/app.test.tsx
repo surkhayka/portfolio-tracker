@@ -22,6 +22,45 @@ beforeEach(() => {
 afterEach(() => {cleanup();localStorage.clear();vi.unstubAllGlobals();vi.restoreAllMocks()})
 
 describe('desktop interactions', () => {
+  it('defaults to Light, restores Dark, and follows device changes only in System', async () => {
+    const system = Object.assign(new EventTarget(), {matches: true})
+    vi.stubGlobal('matchMedia', vi.fn(() => system))
+    const updateSystem = (dark: boolean) => {
+      system.matches = dark
+      act(() => system.dispatchEvent(new Event('change')))
+    }
+    const root = document.documentElement
+    const user = userEvent.setup()
+    const goToSettings = async () => {
+      await user.click(screen.getByRole('button',{name:'Settings'}))
+      return screen.getByRole<HTMLSelectElement>('combobox',{name:'Theme'})
+    }
+    const view = render(<App/>)
+    expect(root.dataset.theme).toBe('light')
+    await user.selectOptions(await goToSettings(), 'dark')
+    expect(root.dataset.theme).toBe('dark')
+    expect(localStorage.getItem('appearance')).toBe('dark')
+
+    view.unmount()
+    render(<App/>)
+    expect(root.dataset.theme).toBe('dark')
+    const theme = await goToSettings()
+    expect(theme.value).toBe('dark')
+    const refresh = vi.spyOn(api,'refresh')
+    await user.selectOptions(theme, 'system')
+    expect(root.dataset.theme).toBe('dark')
+    updateSystem(false)
+    expect(root.dataset.theme).toBe('light')
+    updateSystem(true)
+    expect(root.dataset.theme).toBe('dark')
+    await user.selectOptions(theme, 'light')
+    updateSystem(false)
+    updateSystem(true)
+    expect(root.dataset.theme).toBe('light')
+    expect(api.portfolio).toHaveBeenCalledTimes(2)
+    expect(refresh).not.toHaveBeenCalled()
+  })
+
   it('keeps an opening balance draft when returning from preview, then commits its revision', async () => {
     const user = userEvent.setup()
     render(<App/>)

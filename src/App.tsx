@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ArrowDownToLine, BriefcaseBusiness, ChevronDown, CircleHelp, FileUp, Layers3, Plus, ReceiptText, RefreshCw, Settings2, X } from 'lucide-react'
 import { api, type Action, type Batch, type Portfolio, type Record, type Settings as SettingsModel, type Transfer } from './api'
+import { applyAppearance, readAppearance, type Appearance } from './appearance'
 import { Notice } from './components'
 import { CompanyLogosEnabled, LogoAttribution } from './SymbolLogo'
 import Holdings from './Holdings'
@@ -31,6 +32,7 @@ export default function App() {
   const [refreshing,setRefreshing] = useState(false)
   const [autoRefresh,setAutoRefresh] = useState(() => localStorage.getItem('auto-refresh') !== 'off')
   const [companyLogos, setCompanyLogos] = useState(() => localStorage.getItem('company-logos') === 'on')
+  const [appearance, setAppearance] = useState(readAppearance)
   const [editor,setEditor] = useState<{opening:boolean; row?: Record} | null>(null)
   const [review,setReview] = useState<{action: Action; title: string} | null>(null)
   const [settingsVersion,setSettingsVersion] = useState(0)
@@ -48,6 +50,11 @@ export default function App() {
     localStorage.setItem('company-logos', enabled ? 'on' : 'off')
     setCompanyLogos(enabled)
   }
+  function setAppearancePreference(preference: Appearance) {
+    localStorage.setItem('appearance', preference)
+    setAppearance(preference)
+  }
+  useLayoutEffect(() => applyAppearance(appearance), [appearance])
   const load = useCallback(async () => {
     const version = ++loadVersion.current
     try {
@@ -157,7 +164,9 @@ export default function App() {
         {data && page === 'Holdings' && <Holdings data={data} timezone={settings.timezone} priceStatus={settings.connected ? priceStatus : ''} connected={settings.connected} refresh={refreshing} onImport={() => setPage('Imports')} onAdd={() => add(true)} onReload={load} onEdit={row => setEditor({opening:false,row})}/>}
         {data && page === 'Transactions' && <Transactions rows={data.transactions} timezone={settings.timezone} add={() => add(false)} edit={row=>setEditor({opening:false,row})} change={startReview}/>}
         {page === 'Imports' && <Imports batches={batches} timezone={settings.timezone} transfer={transfer} review={startReview}/>}
-        {page === 'Settings' && <Settings key={settingsVersion} settings={settings} update={updateSettings} transfer={transfer} autoRefresh={autoRefresh} setAutomatic={setAutomatic} companyLogos={companyLogos} setCompanyLogos={setLogoPreference}/>}
+        {page === 'Settings' && <Settings key={settingsVersion} settings={settings} update={updateSettings} transfer={transfer}
+          autoRefresh={autoRefresh} setAutomatic={setAutomatic} companyLogos={companyLogos} setCompanyLogos={setLogoPreference}
+          appearance={appearance} setAppearance={setAppearancePreference}/>}
       </div>
     </main>
     {editor && <TransactionForm initial={editor.row} opening={editor.opening} hidden={!!review} onClose={() => setEditor(null)} onSubmit={action => startReview(action,'Review transaction')}/>}

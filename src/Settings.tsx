@@ -1,12 +1,14 @@
 import { useState, type FormEvent } from 'react'
-import { Clock3, DatabaseBackup, Download, Image, KeyRound, Upload } from 'lucide-react'
+import { Clock3, DatabaseBackup, Download, Image, KeyRound, SunMoon, Upload } from 'lucide-react'
 import { api, type Settings as Model, type Transfer } from './api'
+import type { Appearance } from './appearance'
 import { Modal, Notice } from './components'
 
-export default function Settings({ settings, update, transfer, autoRefresh, setAutomatic, companyLogos, setCompanyLogos }: {
+export default function Settings({ settings, update, transfer, autoRefresh, setAutomatic, companyLogos, setCompanyLogos, appearance, setAppearance }: {
   settings: Model; update: () => Promise<void>; transfer: (operation: Transfer) => Promise<void>
   autoRefresh: boolean; setAutomatic: (enabled: boolean) => void
   companyLogos: boolean; setCompanyLogos: (enabled: boolean) => void
+  appearance: Appearance; setAppearance: (preference: Appearance) => void
 }) {
   const [key,setKey] = useState('')
   const [secret,setSecret] = useState('')
@@ -34,6 +36,17 @@ export default function Settings({ settings, update, transfer, autoRefresh, setA
   }
   return <>
     {error && <Notice error>{error}</Notice>}{message && <Notice>{message}</Notice>}
+    <section className="card settings-card">
+      <div className="section-head"><div><h2><SunMoon size={18}/>Appearance</h2></div></div>
+      <div className="settings-body">
+        <label className="inline-wrap">Theme
+          <select value={appearance} aria-describedby="appearance-help" onChange={e => setAppearance(e.target.value as Appearance)}>
+            <option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option>
+          </select>
+        </label>
+        <p className="muted" id="appearance-help">System follows your device’s appearance.</p>
+      </div>
+    </section>
     <section className="card settings-card">
       <div className="section-head"><div><h2><KeyRound size={18}/>Alpaca market data</h2><p>Consolidated US prices delayed by at least 15 minutes.</p></div><span className={'badge '+(settings.connected ? 'type-buy' : '')}>{settings.connected ? 'Connected' : 'Disconnected'}</span></div>
       <div className="settings-body">

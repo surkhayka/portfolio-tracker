@@ -32,6 +32,7 @@ All screenshots use fictional trades and prices.
 - **Start with current positions.** Choose **Add → Add existing holding** and enter a starting quantity and cost basis. You can add earlier trades later through the import preview.
 - **Add automatic prices if you want them.** In **Settings**, connect your own Alpaca key and secret and select the matching Paper or Live account. The app stores credentials in your OS credential store and uses consolidated US prices delayed by at least 15 minutes. Automatic refresh runs about every two minutes while Holdings is active. You can switch it off or enter prices manually from a holding’s details.
 - **Show company logos if you want them.** Enable **Settings → Company logos** to load logos from [Elbstream](https://elbstream.com/logos) for visible tickers. This setting is off by default. Initials appear when a logo is unavailable.
+- **Choose an appearance.** In **Settings → Appearance**, select Light, Dark, or System. The choice is saved on this device.
 
 ## What you can track
 
