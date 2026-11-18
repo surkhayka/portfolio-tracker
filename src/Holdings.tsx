@@ -9,6 +9,8 @@ import { LogoAttribution, SymbolLogo } from './SymbolLogo'
 const column = createColumnHelper<Holding>()
 const cmp = (a: string | null, b: string | null) => Number(a ?? 0) - Number(b ?? 0)
 const amount = (v?: string | null) => <span className={tone(v)}>{money(v, true)}</span>
+const signedPercent = (v?: string | null) => <span className={tone(v)}>{percent(v, true)}</span>
+const dailyDescription = 'Price move of currently held shares since the previous regular-session close.'
 const cols = [
   column.accessor('symbol', {header: 'Symbol', cell: info => <span className="symbol"><SymbolLogo symbol={info.getValue()}/><strong>{info.getValue()}</strong>{Number(info.row.original.quantity) === 0 && <span className="badge">Closed</span>}</span>, enableHiding: false}),
   column.accessor('quantity', {header: 'Shares', cell: c => shares(c.getValue()), sortingFn: (a,b) => cmp(a.original.quantity,b.original.quantity)}),
@@ -17,11 +19,12 @@ const cols = [
   column.accessor(h => h.average ?? undefined, {id:'average', sortUndefined:'last', sortDescFirst:true, header:'Avg. cost',cell: c => money(c.getValue()), sortingFn: (a,b) => cmp(a.original.average,b.original.average)}),
   column.accessor(h => h.value ?? undefined, {id:'value', sortUndefined:'last', sortDescFirst:true, header:'Market value',cell: c => <strong>{money(c.getValue())}</strong>, sortingFn: (a,b) => cmp(a.original.value,b.original.value)}),
   column.accessor(h => h.unrealized ?? undefined, {id:'unrealized', sortUndefined:'last', sortDescFirst:true, header:'Unrealized gain',cell: c => amount(c.getValue()), sortingFn: (a,b) => cmp(a.original.unrealized,b.original.unrealized)}),
-  column.accessor(h => h.unrealized_percent ?? undefined, {id:'unrealized_percent', sortUndefined:'last', sortDescFirst:true, header:'Unrealized %',cell: c => <span className={tone(c.getValue())}>{percent(c.getValue(), true)}</span>, sortingFn: (a,b) => cmp(a.original.unrealized_percent,b.original.unrealized_percent)}),
-  column.accessor(h => h.daily ?? undefined, {id:'daily', sortUndefined:'last', sortDescFirst:true, header:'Daily price move',cell: c => <span className={tone(c.getValue())}>{money(c.getValue(), true)}{c.row.original.daily_percent !== null && <small className="subnum">{percent(c.row.original.daily_percent,true)}</small>}</span>, sortingFn: (a,b) => cmp(a.original.daily,b.original.daily)}),
+  column.accessor(h => h.unrealized_percent ?? undefined, {id:'unrealized_percent', sortUndefined:'last', sortDescFirst:true, header:'Unrealized %',cell: c => signedPercent(c.getValue()), sortingFn: (a,b) => cmp(a.original.unrealized_percent,b.original.unrealized_percent)}),
+  column.accessor(h => h.daily ?? undefined, {id:'daily', sortUndefined:'last', sortDescFirst:true, header:'Daily price move',cell: c => amount(c.getValue()), sortingFn: (a,b) => cmp(a.original.daily,b.original.daily)}),
+  column.accessor(h => h.daily_percent ?? undefined, {id:'daily_percent', sortUndefined:'last', sortDescFirst:true, header:'Daily gain %',cell: c => signedPercent(c.getValue()), sortingFn: (a,b) => cmp(a.original.daily_percent,b.original.daily_percent)}),
   column.accessor(h => h.total ?? undefined, {id:'total', sortUndefined:'last', sortDescFirst:true, header:'Total gain',cell: c => amount(c.getValue()), sortingFn: (a,b) => cmp(a.original.total,b.original.total)}),
 ]
-const labels: { [key: string]: string } = {quantity:'Shares',price:'Price',allocation:'Allocation',average:'Avg. cost',value:'Market value',unrealized:'Unrealized gain',unrealized_percent:'Unrealized %',daily:'Daily price move',total:'Total gain'}
+const labels: { [key: string]: string } = {quantity:'Shares',price:'Price',allocation:'Allocation',average:'Avg. cost',value:'Market value',unrealized:'Unrealized gain',unrealized_percent:'Unrealized %',daily:'Daily price move',daily_percent:'Daily gain %',total:'Total gain'}
 
 export default function Holdings({ data, timezone, priceStatus, refresh, connected, onImport, onAdd, onReload, onEdit }: {
   data: Portfolio; timezone: string; priceStatus: string; refresh: boolean; connected: boolean; onImport: () => void
@@ -62,14 +65,19 @@ export default function Holdings({ data, timezone, priceStatus, refresh, connect
   const active = data.holdings.filter(h => Number(h.quantity) > 0).length
   const hasActivity = data.holdings.length > 0
   const cards = [
-    {label:'Holdings value', Icon:Wallet, value:hasActivity ? money(summary.value) : '—', className:'', bottom:hasActivity ? money(summary.basis) + ' invested cost' : 'Market value of open positions'},
-    {label:'Unrealized gain', Icon:TrendingUp,value:hasActivity ? money(summary.unrealized,true) : '—',className:tone(summary.unrealized),bottom:summary.unrealized_percent !== null ? percent(summary.unrealized_percent,true) + ' on invested cost' : 'Value minus remaining cost'},
+    {label:'Holdings value', Icon:Wallet, value:hasActivity ? money(summary.value) : '—', className:'', bottom:hasActivity ? money(summary.basis) + ' remaining cost' : 'Market value of open positions',
+      detail:active > 0 && <div className="muted" title={summary.daily_percent == null
+        ? 'Daily move requires comparable session prices and prior closes for every open holding.'
+        : dailyDescription}>Daily move {summary.daily == null ? '—' : <>{amount(summary.daily)} ({signedPercent(summary.daily_percent)})</>}</div>},
+    {label:'Unrealized gain', Icon:TrendingUp,value:hasActivity ? money(summary.unrealized,true) : '—',className:tone(summary.unrealized),bottom:summary.unrealized_percent !== null ? percent(summary.unrealized_percent,true) + ' on remaining cost' : 'Value minus remaining cost'},
     {label:'Realized gain', Icon:Coins,value:hasActivity ? money(summary.realized,true) : '—',className:tone(summary.realized),bottom:hasActivity ? money(summary.dividends) + ' recorded dividends' : 'Gains and losses on sales'},
-    {label:summary.incomplete ? 'Recorded total gain' : 'Total gain', Icon:CircleDollarSign,value:hasActivity ? money(summary.total,true) : '—',className:tone(summary.total),bottom:summary.incomplete ? 'Includes opening balances' : 'Realized, unrealized and dividends'},
+    {label:summary.incomplete ? 'Recorded total gain' : 'Total gain', Icon:CircleDollarSign,value:hasActivity ? money(summary.total,true) : '—',className:tone(summary.total),bottom:summary.incomplete ? 'Includes opening balances' : 'Realized, unrealized and dividends',
+      detail:hasActivity && <div className="muted" title={`Total gain divided by ${money(summary.invested)} in recorded buys, buy fees, and opening balances. Reinvested proceeds count toward new purchases.`}>Return on invested {signedPercent(summary.return_on_invested)}</div>},
   ]
   return <>
-    <div className="summary-grid">{cards.map(({label,Icon,value,className,bottom}) => <article className="card metric" key={label}>
+    <div className="summary-grid">{cards.map(({label,Icon,value,className,bottom,detail}) => <article className="card metric" key={label}>
       <div className="metric-label"><Icon size={15}/>{label}</div><div className={'metric-number ' + className}>{value}</div><div className="muted">{bottom}</div>
+      {detail}
     </article>)}</div>
     {summary.missing.length > 0 && <Notice>Valuation is incomplete. Prices are unavailable for {summary.missing.join(', ')}.</Notice>}
     <section className="card holdings">
@@ -105,7 +113,7 @@ export default function Holdings({ data, timezone, priceStatus, refresh, connect
         <div className="actions center"><button className="button primary" onClick={onImport}>Import transactions</button><button className="button secondary" onClick={onAdd}><Plus size={16}/>Add existing holding</button></div>
       </Empty>}
       <TablePager count={rows.length} page={pageIndex} setPage={setPage}/>
-      <div className="table-footer"><span title="Daily price move measures currently held shares against the previous regular-session close."><span className={`status-dot ${latest ? 'ok' : ''}`}/>{refresh ? 'Refreshing prices…' : priceStatus || (latest ? `${connected ? 'Alpaca SIP' : 'Cached Alpaca SIP'} · 15-minute delayed · latest price ${age(latest)}` : 'Alpaca SIP · 15-minute delayed')}</span><span>USD</span></div>
+      <div className="table-footer"><span title={dailyDescription}><span className={`status-dot ${latest ? 'ok' : ''}`}/>{refresh ? 'Refreshing prices…' : priceStatus || (latest ? `${connected ? 'Alpaca SIP' : 'Cached Alpaca SIP'} · 15-minute delayed · latest price ${age(latest)}` : 'Alpaca SIP · 15-minute delayed')}</span><span>USD</span></div>
     </section>
     {selected && <HoldingDetail holding={selected} records={data.transactions.filter(r => r.event.symbol === selected.symbol)} timezone={timezone} onClose={() => setSelection(null)} onReload={onReload} onEdit={row => { setSelection(null); onEdit(row) }}/>}
   </>
@@ -136,6 +144,7 @@ function HoldingDetail({ holding: h, records, timezone, onClose, onReload, onEdi
       <dl className="stats">{[
         ['Shares',shares(h.quantity)],['Price',money(h.quote?.price)],['Average cost',money(h.average)],['Remaining cost',money(h.basis)],
         ['Unrealized gain',amount(h.unrealized)],['Realized gain',amount(h.realized)],['Dividends',money(h.dividends)],['Daily price move',amount(h.daily)],
+        ['Daily gain %',signedPercent(h.daily_percent)],
       ].map(([label,value]) => <div key={String(label)}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
       {h.incomplete && <Notice>Realized gain and dividends reflect only recorded activity. Earlier history is unavailable.</Notice>}
       <section className="detail-section"><div className="subhead"><h3>Price source</h3>{Number(h.quantity) > 0 && <button className="button secondary small" onClick={() => setManual(!manual)}><Pencil size={14}/>Manual price</button>}</div>

@@ -6,7 +6,7 @@ import { api, type Action, type Holding, type Portfolio, type Preview, type Reco
 import { Review } from '../src/Imports'
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn(), isTauri: () => false }))
-const empty: Portfolio = {revision:0,holdings:[],transactions:[],summary:{basis:'0',value:'0',unrealized:'0',unrealized_percent:null,realized:'0',dividends:'0',total:'0',incomplete:false,missing:[]}}
+const empty: Portfolio = {revision:0,holdings:[],transactions:[],summary:{basis:'0',value:'0',unrealized:'0',unrealized_percent:null,realized:'0',dividends:'0',total:'0',invested:'0',return_on_invested:null,daily:null,daily_percent:null,incomplete:false,missing:[]}}
 const result: Preview = {revision:7,changed:1,conflicts:[],warnings:[],opening_conflicts:[],rows:[],adjustments:[],
   impacts:[{symbol:'AAPL',before:{quantity:'0',basis:'0',realized:'0',dividends:'0',incomplete:false},
     after:{quantity:'2',basis:'200',realized:'0',dividends:'0',incomplete:true}}]}
@@ -131,6 +131,31 @@ it('sorts priced holdings numerically and combines position and gain filters', a
   await user.selectOptions(status,'all')
   await user.selectOptions(gain,'unpriced')
   expect(order()).toEqual(['CCCCC'])
+})
+
+it('shows signed daily moves and return on invested, and sorts holding percentages', async () => {
+  const user = userEvent.setup()
+  vi.mocked(api.portfolio).mockResolvedValue({
+    ...empty, holdings:[
+      {...holding('LOW','300','50'),daily:'10',daily_percent:'0.02'},
+      {...holding('HIGH','120','20'),daily:'5',daily_percent:'0.10'},
+      holding('NONE','100','0'),
+    ], summary:{...empty.summary, daily:'-14', daily_percent:'-0.035', total:'100', invested:'800', return_on_invested:'0.125'},
+  })
+  render(<App/>)
+  const table = await screen.findByRole('table')
+  const valueCard = screen.getByText('Holdings value').closest('article')!
+  expect(within(valueCard).getByText('-$14.00').className).toBe('loss')
+  expect(within(valueCard).getByText('-3.50%').className).toBe('loss')
+  const totalCard = screen.getByText('Total gain',{selector:'.metric-label'}).closest('article')!
+  expect(within(totalCard).getByText('+12.50%').className).toBe('gain')
+  await user.click(within(table).getByRole('button',{name:'Daily gain %'}))
+  const dailyPercentages = within(table).getAllByRole('row').slice(1)
+    .map(row => within(row).getAllByRole('cell').at(-3)?.textContent)
+  expect(dailyPercentages).toEqual(['+10.00%', '+2.00%', '—'])
+  await user.click(screen.getByText('Columns',{exact:true}))
+  await user.click(screen.getByRole('checkbox',{name:'Daily gain %'}))
+  expect(within(table).queryByRole('button',{name:'Daily gain %'})).toBeNull()
 })
 
 it('updates prices without reloading the ledger or polling when the user opens Transactions', async () => {

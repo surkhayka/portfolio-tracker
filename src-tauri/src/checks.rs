@@ -328,10 +328,114 @@ fn prices_missing_and_split_adjusted_baseline() {
         ledger::num(result["holdings"][0]["daily"].as_str().unwrap()),
         ledger::num("40")
     );
+    assert_eq!(
+        ledger::num(result["summary"]["daily_percent"].as_str().unwrap()),
+        ledger::num("40") / ledger::num("1060")
+    );
+    assert_eq!(
+        ledger::num(result["summary"]["daily"].as_str().unwrap()),
+        ledger::num("40")
+    );
     market::set_override(&db, "AMD", Some("60"), Some("2025-01-08T16:00:00Z")).unwrap();
     let result = portfolio(&db);
     assert_eq!(result["summary"]["value"], "1200");
     assert!(result["holdings"][0]["daily"].is_null());
+    assert!(result["summary"]["daily"].is_null());
+    assert!(result["summary"]["daily_percent"].is_null());
+}
+
+#[test]
+fn portfolio_daily_percent_weights_open_positions_with_matching_sessions() {
+    let temp = Temp::new();
+    let mut db = temp.open();
+    save(
+        &mut db,
+        &import(csv(concat!(
+            "buy-aapl,2025-01-06T15:30:00Z,BUY,AAPL,USD,1,100,,,,,,\n",
+            "buy-msft,2025-01-06T15:30:00Z,BUY,MSFT,USD,3,100,,,,,,\n",
+            "buy-ko,2025-01-06T15:30:00Z,BUY,KO,USD,1,100,,,,,,\n",
+            "sell-ko,2025-01-07T15:30:00Z,SELL,KO,USD,1,102,,0,true,,,"
+        ))),
+    );
+    let aapl = Quote {
+        price: ledger::num("110"),
+        at: "2025-01-08T15:01:00.000000000Z".into(),
+        reference: Some(ledger::num("100")),
+        reference_at: Some("2025-01-07T21:00:00.000000000Z".into()),
+        fetched_at: "2025-01-08T15:17:00.000000000Z".into(),
+        manual: false,
+    };
+    market::save_quotes(&mut db, BTreeMap::from([("AAPL".into(), aapl.clone())])).unwrap();
+    assert!(portfolio(&db)["summary"]["daily_percent"].is_null());
+
+    let mut msft = Quote {
+        price: ledger::num("98"),
+        at: "2025-01-07T21:00:00.000000000Z".into(),
+        reference_at: Some("2025-01-06T21:00:00.000000000Z".into()),
+        ..aapl
+    };
+    market::save_quotes(&mut db, BTreeMap::from([("MSFT".into(), msft.clone())])).unwrap();
+    assert!(portfolio(&db)["summary"]["daily_percent"].is_null());
+
+    msft.at = "2025-01-08T15:00:00.000000000Z".into();
+    msft.reference_at = Some("2025-01-07T21:00:00.000000000Z".into());
+    market::save_quotes(&mut db, BTreeMap::from([("MSFT".into(), msft)])).unwrap();
+    let result = portfolio(&db);
+    assert_eq!(
+        ledger::num(result["summary"]["daily_percent"].as_str().unwrap()),
+        ledger::num("0.01")
+    );
+    assert_eq!(
+        ledger::num(result["summary"]["daily"].as_str().unwrap()),
+        ledger::num("4")
+    );
+}
+
+#[test]
+fn return_on_invested_uses_cumulative_recorded_purchase_cost() {
+    let temp = Temp::new();
+    let mut db = temp.open();
+    assert!(portfolio(&db)["summary"]["return_on_invested"].is_null());
+    save(
+        &mut db,
+        &import(csv(concat!(
+            "opening,2025-01-06T15:30:00Z,OPENING_BALANCE,AAPL,USD,2,,80,,,,,\n",
+            "buy-msft,2025-01-06T15:30:00Z,BUY,MSFT,USD,1,100,,2,,,,\n",
+            "dividend,2025-01-07T15:30:00Z,DIVIDEND,MSFT,USD,,,5,1,,,,\n",
+            "sell-msft,2025-01-08T15:30:00Z,SELL,MSFT,USD,1,115,,1,true,,,\n",
+            "reopen-msft,2025-01-09T15:30:00Z,BUY,MSFT,USD,1,58,,2,,,,"
+        ))),
+    );
+    assert!(portfolio(&db)["summary"]["return_on_invested"].is_null());
+    for (symbol, price) in [("AAPL", "50"), ("MSFT", "84")] {
+        market::set_override(&db, symbol, Some(price), Some("2025-01-10T16:00:00Z")).unwrap();
+    }
+    let result = portfolio(&db);
+    let summary = &result["summary"];
+    assert_eq!(summary["invested"], "242");
+    assert_eq!(summary["basis"], "140");
+    assert_eq!(summary["total"], "60");
+    assert_eq!(summary["incomplete"], true);
+    assert_eq!(
+        ledger::num(summary["return_on_invested"].as_str().unwrap()),
+        ledger::num("60") / ledger::num("242")
+    );
+
+    save(
+        &mut db,
+        &Action::Exclude {
+            id: "reopen-msft".into(),
+            excluded: true,
+        },
+    );
+    let result = portfolio(&db);
+    let summary = &result["summary"];
+    assert_eq!(summary["invested"], "182");
+    assert_eq!(summary["total"], "36");
+    assert_eq!(
+        ledger::num(summary["return_on_invested"].as_str().unwrap()),
+        ledger::num("36") / ledger::num("182")
+    );
 }
 
 #[test]

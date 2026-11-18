@@ -43,7 +43,7 @@ All screenshots use fictional trades and prices.
 | **Imports** | Preview, review, and undo imports. Repeated exports with the same transaction IDs keep duplicate trades out of the ledger. |
 | **Settings** | Price connection, display timezone, SQLite backups, restore, and CSV export. |
 
-Portfolio tracks long positions in USD using weighted-average cost. Buy fees add to basis. Realized gain is sale proceeds less fees and the basis released by the sale. Total gain combines realized gain, unrealized gain, and recorded dividends. Opening balances only capture gain history from the information you provide. Daily price move compares currently held shares against the previous regular session close. Broker figures can differ because of rounding, recorded fees, or a different cost method.
+Portfolio tracks long positions in USD using weighted-average cost. Buy fees add to basis. Realized gain is sale proceeds less fees and the basis released by the sale. Total gain combines realized gain, unrealized gain, and recorded dividends. Return on invested divides total gain by cumulative recorded purchase costs, including buy fees and opening balances. Reinvested proceeds count toward each new purchase. Opening balances only capture gain history from the information you provide. Daily gain % measures the price movement of currently held shares since the previous regular-session close. The portfolio percentage is weighted by the prior-close value of each holding and requires comparable prices for every open position. Broker figures can differ because of rounding, recorded fees, or a different cost method.
 
 ## Local data and backups
 

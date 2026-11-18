@@ -245,6 +245,8 @@ pub struct Account {
     pub dividends: D,
     pub incomplete: bool,
     #[serde(skip)]
+    pub invested: D,
+    #[serde(skip)]
     precision: D,
     #[serde(skip)]
     pub splits: Vec<(String, D)>,
@@ -298,6 +300,7 @@ pub fn replay<'a>(records: impl IntoIterator<Item = &'a Record>) -> Result<Repla
                 }
                 p.quantity = quantity;
                 p.basis = e.gross();
+                p.invested = p.basis;
                 p.precision = tolerance;
                 p.incomplete = true;
             }
@@ -305,6 +308,7 @@ pub fn replay<'a>(records: impl IntoIterator<Item = &'a Record>) -> Result<Repla
                 p.quantity += quantity;
                 let cost = e.gross() + fees;
                 p.basis += cost;
+                p.invested += cost;
                 if p.basis > D::from(1_000_000_000_000_000_000u64) {
                     return Err(error("Cost basis exceeds supported range."));
                 }

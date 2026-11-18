@@ -40,12 +40,16 @@ pub struct Holding {
 #[derive(Serialize)]
 pub struct Summary {
     basis: D,
+    invested: D,
     value: Option<D>,
     unrealized: Option<D>,
     unrealized_percent: Option<D>,
+    daily: Option<D>,
+    daily_percent: Option<D>,
     realized: D,
     dividends: D,
     total: Option<D>,
+    return_on_invested: Option<D>,
     incomplete: bool,
     missing: Vec<String>,
 }
@@ -114,15 +118,21 @@ pub fn valuation(db: &Connection, accounts: &BTreeMap<String, Account>) -> Resul
     let overrides = table(db, true)?;
     let mut summary = Summary {
         basis: D::ZERO,
+        invested: D::ZERO,
         value: Some(D::ZERO),
         unrealized: None,
         unrealized_percent: None,
+        daily: None,
+        daily_percent: None,
         total: None,
+        return_on_invested: None,
         realized: D::ZERO,
         dividends: D::ZERO,
         incomplete: false,
         missing: vec![],
     };
+    let mut previous_value = Some(D::ZERO);
+    let mut daily_session: Option<(String, String)> = None;
     let mut holdings = vec![];
     for (symbol, account) in accounts {
         let active = !account.quantity.is_zero();
@@ -140,6 +150,7 @@ pub fn valuation(db: &Connection, accounts: &BTreeMap<String, Account>) -> Resul
             Some(D::ZERO)
         };
         summary.basis += account.basis;
+        summary.invested += account.invested;
         summary.realized += account.realized;
         summary.dividends += account.dividends;
         summary.incomplete |= account.incomplete;
@@ -161,6 +172,21 @@ pub fn valuation(db: &Connection, accounts: &BTreeMap<String, Account>) -> Resul
             .map(|(quote, prior)| quote.price - prior);
         let daily = difference.and_then(|d| account.quantity.checked_mul(d));
         let daily_percent = difference.zip(reference).and_then(|(a, b)| share(a, b));
+        if active {
+            previous_value = previous_value.and_then(|sum| {
+                let quote = quote.as_ref()?;
+                // Regular US sessions fit within one UTC date. Quote timestamps are stored in UTC.
+                let session = (quote.at.get(..10)?, quote.reference_at.as_deref()?);
+                if let Some((date, close)) = &daily_session {
+                    if (date.as_str(), close.as_str()) != session {
+                        return None;
+                    }
+                } else {
+                    daily_session = Some((session.0.into(), session.1.into()));
+                }
+                sum.checked_add(account.quantity.checked_mul(reference?)?)
+            });
+        }
         holdings.push(Holding {
             symbol: symbol.clone(),
             account: account.clone(),
@@ -178,9 +204,19 @@ pub fn valuation(db: &Connection, accounts: &BTreeMap<String, Account>) -> Resul
     }
     summary.unrealized = summary.value.map(|v| v - summary.basis);
     summary.unrealized_percent = summary.unrealized.and_then(|u| share(u, summary.basis));
+    let previous_value = previous_value.filter(|value| !value.is_zero());
+    summary.daily = summary
+        .value
+        .zip(previous_value)
+        .and_then(|(current, prior)| current.checked_sub(prior));
+    summary.daily_percent = summary
+        .daily
+        .zip(previous_value)
+        .and_then(|(daily, prior)| share(daily, prior));
     summary.total = summary
         .unrealized
         .map(|u| u + summary.realized + summary.dividends);
+    summary.return_on_invested = summary.total.and_then(|gain| share(gain, summary.invested));
     for holding in &mut holdings {
         holding.allocation = if holding.account.quantity.is_zero() {
             None

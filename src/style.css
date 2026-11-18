@@ -206,7 +206,6 @@ tbody tr:last-child td { border-bottom: 0 }
 .holdings-table th:first-child, .holdings-table td:first-child { padding-left: 18px }
 .holdings-table th:last-child,.holdings-table td:last-child { padding-right: 10px; padding-left: 2px }
 .holdings-table td strong { font-weight: 680 }
-.subnum { display: block; font-size: 10px; opacity: .88 }
 sup { color: var(--accent); font-size: 10px; margin-left: 2px }
 .row-actions { display: flex; gap: 4px; justify-content: end }
 .symbol { display: inline-flex; align-items: center; gap: 8px }

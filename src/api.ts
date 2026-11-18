@@ -18,7 +18,8 @@ export type Valuation = {
   revision: number; holdings: Holding[]
   summary: Pick<Account, 'basis' | 'realized' | 'dividends' | 'incomplete'> & {
     value: string | null; unrealized: string | null; unrealized_percent: string | null
-    total: string | null; missing: string[]
+    total: string | null; invested: string; return_on_invested: string | null
+    daily: string | null; daily_percent: string | null; missing: string[]
   }
 }
 export type Portfolio = Valuation & { transactions: Record[] }
