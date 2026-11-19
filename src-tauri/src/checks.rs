@@ -28,6 +28,30 @@ impl Drop for Temp {
 
 const EXAMPLE: &str = include_str!("../../public/portfolio-example.csv");
 
+#[cfg(target_os = "windows")]
+#[test]
+fn windows_credential_store_round_trip() {
+    let user = format!("test-{}", uuid::Uuid::new_v4());
+    let entry = keyring::Entry::new("app.portfolio.test", &user).unwrap();
+    entry.set_password("synthetic-test-secret").unwrap();
+    let saved = entry.get_password();
+    entry.delete_credential().unwrap();
+    assert_eq!(saved.unwrap(), "synthetic-test-secret");
+    assert!(matches!(entry.get_password(), Err(keyring::Error::NoEntry)));
+}
+
+#[test]
+fn backup_can_replace_an_existing_file() {
+    let temp = Temp::new();
+    let mut db = temp.open();
+    let file = temp.0.join("backup.sqlite");
+    storage::backup_file(&db, &file).unwrap();
+    save(&mut db, &import(EXAMPLE));
+    storage::backup_file(&db, &file).unwrap();
+    let backup = Connection::open(&file).unwrap();
+    assert_eq!(portfolio(&db), portfolio(&backup));
+}
+
 fn import(csv: impl Into<String>) -> Action {
     Action::Import {
         filename: "synthetic.csv".into(),

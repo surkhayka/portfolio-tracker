@@ -1,0 +1,9 @@
+{
+  "app": {
+    "windows": [{
+      "label": "main", "title": "Portfolio", "width": 1280, "height": 800,
+      "minWidth": 1000, "minHeight": 700, "center": true, "dragDropEnabled": false,
+      "titleBarStyle": "Overlay", "hiddenTitle": true, "trafficLightPosition": {"x": 18, "y": 20}
+    }]
+  }
+}

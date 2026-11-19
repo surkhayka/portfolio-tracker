@@ -1,3 +1,5 @@
+document.documentElement.dataset.platform = /Windows/.test(navigator.userAgent) ? 'windows' : 'macos'
+
 // Apply the saved palette before the page stylesheet can paint.
 try {
   const preference = localStorage.getItem('appearance')

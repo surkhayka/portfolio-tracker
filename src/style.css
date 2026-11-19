@@ -128,6 +128,9 @@ h1, h2, h3, p, dl, dd { margin: 0 }
 button, summary { -webkit-user-select: none; user-select: none }
 a { color: var(--accent) }
 .titlebar { position: absolute; inset: 0 0 auto; height: 42px; z-index: 4 }
+[data-platform="windows"] .titlebar { display: none }
+[data-platform="windows"] .sidebar { padding-top: 24px }
+[data-platform="windows"] .topbar { height: 50px; padding-top: 0 }
 .app-shell { display: grid; grid-template-columns: 202px minmax(0,1fr); height: 100%; position: relative; overflow: hidden }
 .sidebar { display: flex; flex-direction: column; background: var(--sidebar); border-right: 1px solid var(--edge); padding: 58px 15px 18px; gap: 33px; min-height: 0 }
 .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px }

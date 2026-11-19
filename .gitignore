@@ -3,6 +3,8 @@ dist/
 src-tauri/target/
 src-tauri/gen/
 .DS_Store
+__pycache__/
+windows-artifacts/
 *.sqlite*
 .env*
 *.pdf
