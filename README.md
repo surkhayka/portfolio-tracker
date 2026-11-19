@@ -1,8 +1,10 @@
 # Portfolio
 
-A free desktop portfolio tracker for US stocks and ETFs. Import your trades, see your positions and gains, and keep your ledger on your Mac. Portfolio works offline with manual prices and can fetch delayed quotes through Alpaca.
+A free desktop portfolio tracker for US stocks and ETFs. Import your trades, see your positions and gains, and keep your ledger on your computer. Portfolio works offline with manual prices and can fetch delayed quotes through Alpaca.
 
 **[Download Portfolio for Mac · Apple silicon](https://github.com/surkhayka/portfolio-tracker/releases/latest/download/Portfolio-macOS-Apple-silicon.zip)** · [Release notes and downloads](https://github.com/surkhayka/portfolio-tracker/releases)
+
+**[Download Windows x64 beta](https://github.com/surkhayka/portfolio-tracker/releases/download/v0.1.6/Portfolio-Windows-x64-setup.exe)**. This installer was cross-compiled on macOS. Windows runtime testing is pending.
 
 ## Screenshots
 
@@ -21,9 +23,17 @@ All screenshots use fictional trades and prices.
 
 ## Install
 
+### macOS
+
 1. Download the ZIP above and unzip it.
 2. Move **Portfolio.app** to **Applications** and open it. For an update, quit the existing copy before replacing it. Your ledger lives in macOS Application Support.
 3. This release is built for Apple silicon and uses ad hoc signing. If macOS prompts you about the download, see [Apple’s guide to opening apps safely](https://support.apple.com/en-us/102445). macOS may also ask Portfolio to reauthorize access to your saved Alpaca credentials after an update.
+
+### Windows x64 beta
+
+Run **Portfolio-Windows-x64-setup.exe**, then open Portfolio from the Start menu. The installer installs for your user account and can download Microsoft WebView2 if it is missing. Close Portfolio before installing an update.
+
+This build is unsigned, so Windows may display a SmartScreen warning. Windows 11 with Smart App Control enabled may block it. Installation, native credentials, and desktop behavior still need verification on Windows.
 
 ## Start tracking
 
@@ -47,11 +57,11 @@ Portfolio tracks long positions in USD using weighted-average cost. Buy fees add
 
 ## Local data and backups
 
-On macOS, the SQLite ledger and cached prices are stored under `~/Library/Application Support/app.portfolio.local`. **Settings → Create backup** saves a complete SQLite copy. CSV export contains active transactions for portability. Alpaca credentials stay in Keychain and are excluded from exports and backups. Portfolio sends the symbols needed for quote requests to Alpaca when refreshing prices.
+The SQLite ledger and cached prices live under `~/Library/Application Support/app.portfolio.local` on macOS and `%APPDATA%\app.portfolio.local` on Windows. **Settings → Create backup** saves a complete SQLite copy. CSV export contains active transactions for portability. Alpaca credentials use Keychain on macOS and Credential Manager on Windows, and are excluded from exports and backups. Portfolio sends the symbols needed for quote requests to Alpaca when refreshing prices.
 
 ## Build from source
 
-Install Node.js 22 or later, stable Rust, and the Xcode command line tools. The desktop app uses Tauri, Rust, React, TypeScript, and SQLite.
+Install Node.js 22 or later and stable Rust. On macOS, install the Xcode command line tools. On Windows, install the Visual Studio C++ build tools and Microsoft WebView2. The desktop app uses Tauri, Rust, React, TypeScript, and SQLite.
 
 ```sh
 npm ci
@@ -65,6 +75,8 @@ npm run tauri build -- --bundles app -- --locked
 ```
 
 By default, the build writes `Portfolio.app` to `src-tauri/target/release/bundle/macos/`. To run the built app against a separate test ledger, set `PORTFOLIO_DATA_DIR` to an absolute scratch directory before launching the executable.
+
+On Windows, use `npm run tauri build -- --bundles nsis -- --locked`. The installer is written to `src-tauri/target/release/bundle/nsis/`. The Windows build workflow runs the Rust and frontend tests and exercises an installed copy using fictional data. When a runner is available, it produces an installer, a screenshot, and test results as a GitHub Actions artifact.
 
 For bugs or feature requests, [open an issue](https://github.com/surkhayka/portfolio-tracker/issues/new). Include your app version and steps to reproduce. Use sample data when attaching CSVs or screenshots.
 
