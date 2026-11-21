@@ -1,6 +1,7 @@
 """Exercise the installed app through Windows WebDriver with synthetic data."""
 import base64
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -37,7 +38,12 @@ def wait_for(predicate, description):
 
 def session(application):
     return request("POST", "/session", {
-        "capabilities": {"alwaysMatch": {"tauri:options": {"application": str(application)}}},
+        "capabilities": {"alwaysMatch": {"tauri:options": {
+            "application": str(application),
+            "webviewOptions": {
+                "userDataFolder": str(Path(os.environ["PORTFOLIO_DATA_DIR"]) / "webview-profile"),
+            },
+        }}},
     })["sessionId"]
 
 
