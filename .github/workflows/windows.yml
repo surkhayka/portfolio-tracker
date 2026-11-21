@@ -57,8 +57,12 @@ jobs:
         run: |
           cargo install tauri-driver --locked
           if ($LASTEXITCODE -ne 0) { throw "Could not install tauri-driver" }
-          $edge = (Get-Item "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe").VersionInfo.ProductVersion
-          Invoke-WebRequest "https://msedgedriver.microsoft.com/$edge/edgedriver_win64.zip" -OutFile "$env:RUNNER_TEMP\edgedriver.zip"
+          $runtime = Get-ChildItem "${env:ProgramFiles(x86)}\Microsoft\EdgeWebView\Application\*\msedgewebview2.exe" |
+            Sort-Object { [version]$_.VersionInfo.ProductVersion } -Descending | Select-Object -First 1
+          if (!$runtime) { throw "Microsoft WebView2 Runtime was not found" }
+          $runtimeVersion = $runtime.VersionInfo.ProductVersion
+          Write-Host "Testing against WebView2 $runtimeVersion"
+          Invoke-WebRequest "https://msedgedriver.microsoft.com/$runtimeVersion/edgedriver_win64.zip" -OutFile "$env:RUNNER_TEMP\edgedriver.zip"
           Expand-Archive "$env:RUNNER_TEMP\edgedriver.zip" "$env:RUNNER_TEMP\edgedriver"
           "$env:RUNNER_TEMP\edgedriver" >> $env:GITHUB_PATH
       - name: Install and exercise the app
