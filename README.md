@@ -2,9 +2,14 @@
 
 A free desktop portfolio tracker for US stocks and ETFs. Import your trades, see your positions and gains, and keep your ledger on your computer. Portfolio works offline with manual prices and can fetch delayed quotes through Alpaca.
 
-**[Download Portfolio for Mac · Apple silicon](https://github.com/surkhayka/portfolio-tracker/releases/latest/download/Portfolio-macOS-Apple-silicon.zip)** · [Release notes and downloads](https://github.com/surkhayka/portfolio-tracker/releases)
+| Platform | Download |
+| --- | --- |
+| **Mac · Apple silicon** | **[Download Mac app (.zip)](https://github.com/surkhayka/portfolio-tracker/releases/latest/download/Portfolio-macOS-Apple-silicon.zip)** |
+| **Windows · x64** | **[Download Windows installer (.exe)](https://github.com/surkhayka/portfolio-tracker/releases/latest/download/Portfolio-Windows-x64-setup.exe)** |
 
-**[Download Windows x64 beta](https://github.com/surkhayka/portfolio-tracker/releases/download/v0.1.6/Portfolio-Windows-x64-setup.exe)**. The published installer passed [desktop tests on Windows Server 2022 x64](https://github.com/surkhayka/portfolio-tracker/actions/runs/44891125445). A manual Windows 11 PC check remains pending.
+[Release notes](https://github.com/surkhayka/portfolio-tracker/releases/latest) · [All releases](https://github.com/surkhayka/portfolio-tracker/releases)
+
+The Windows installer passed [desktop tests on Windows Server 2022 x64](https://github.com/surkhayka/portfolio-tracker/actions/runs/44891125445). A manual Windows 11 PC check remains pending.
 
 ## Screenshots
 
@@ -29,7 +34,7 @@ All screenshots use fictional trades and prices.
 2. Move **Portfolio.app** to **Applications** and open it. For an update, quit the existing copy before replacing it. Your ledger lives in macOS Application Support.
 3. This release is built for Apple silicon and uses ad hoc signing. If macOS prompts you about the download, see [Apple’s guide to opening apps safely](https://support.apple.com/en-us/102445). macOS may also ask Portfolio to reauthorize access to your saved Alpaca credentials after an update.
 
-### Windows x64 beta
+### Windows x64
 
 Run **Portfolio-Windows-x64-setup.exe**, then open Portfolio from the Start menu. The installer installs for your user account and can download Microsoft WebView2 if it is missing. Close Portfolio before installing an update.
 
