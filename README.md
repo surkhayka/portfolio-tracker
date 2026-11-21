@@ -4,7 +4,7 @@ A free desktop portfolio tracker for US stocks and ETFs. Import your trades, see
 
 **[Download Portfolio for Mac · Apple silicon](https://github.com/surkhayka/portfolio-tracker/releases/latest/download/Portfolio-macOS-Apple-silicon.zip)** · [Release notes and downloads](https://github.com/surkhayka/portfolio-tracker/releases)
 
-**[Download Windows x64 beta](https://github.com/surkhayka/portfolio-tracker/releases/download/v0.1.6/Portfolio-Windows-x64-setup.exe)**. This installer was cross-compiled on macOS. Windows runtime testing is pending.
+**[Download Windows x64 beta](https://github.com/surkhayka/portfolio-tracker/releases/download/v0.1.6/Portfolio-Windows-x64-setup.exe)**. The published installer passed [desktop tests on Windows Server 2022 x64](https://github.com/surkhayka/portfolio-tracker/actions/runs/44891125445). A manual Windows 11 PC check remains pending.
 
 ## Screenshots
 
@@ -33,7 +33,7 @@ All screenshots use fictional trades and prices.
 
 Run **Portfolio-Windows-x64-setup.exe**, then open Portfolio from the Start menu. The installer installs for your user account and can download Microsoft WebView2 if it is missing. Close Portfolio before installing an update.
 
-This build is unsigned, so Windows may display a SmartScreen warning. Windows 11 with Smart App Control enabled may block it. Installation, native credentials, and desktop behavior still need verification on Windows.
+This build is unsigned, so Windows may display a SmartScreen warning. Windows 11 with Smart App Control enabled may block it. Automated Windows tests cover installation, CSV import, trade exclusion, manual holdings, dark mode, and restart persistence. Separate backend tests verify Windows credential storage and backup handling.
 
 ## Start tracking
 
